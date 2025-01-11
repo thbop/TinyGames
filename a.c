@@ -124,6 +124,7 @@ int mainCRTStartup() {
         }
 
         flappy.y += flappy.vy;
+        if ( flappy.y <= 0 ) flappy.y = 0;
 
         if ( flappy.y >= SCREEN_HEIGHT )
             Reset(pipes, &nextPipe, &score);
