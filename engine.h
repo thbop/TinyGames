@@ -4,9 +4,11 @@
 
 
 // Application stuff
-#define SCREEN_WIDTH  120 // Win 10 is probably 80
-#define SCREEN_HEIGHT 30
-#define SCREEN_SIZE   (SCREEN_WIDTH*SCREEN_HEIGHT)
+#define SCREEN_WIDTH       120 // Win 10 is probably 80
+#define SCREEN_HEIGHT      30
+#define HALF_SCREEN_WIDTH  (SCREEN_WIDTH>>1)
+#define HALF_SCREEN_HEIGHT (SCREEN_HEIGHT>>1)
+#define SCREEN_SIZE        (SCREEN_WIDTH*SCREEN_HEIGHT)
 
 typedef unsigned char Surface;
 
