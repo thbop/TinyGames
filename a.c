@@ -3,57 +3,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Application stuff
-#define SCREEN_WIDTH  120 // Win 10 is probably 80
-#define SCREEN_HEIGHT 30
-#define SCREEN_SIZE   SCREEN_WIDTH*SCREEN_HEIGHT
-#define FPS           60
-#define FRAMETIME     (1000 / FPS)
-
-// Keys
-#define KeyDown(key)  GetAsyncKeyState(key)
-#define K_SPACE       0x20
-
-// Boolean
-#define true          1
-#define false         0
-
-#define ClearScreen() memset(screen, ' ', SCREEN_SIZE)
-
-void DrawChar(unsigned char *screen, char c, int x, int y) {
-    if ( 0 < x && x < SCREEN_WIDTH && 0 < y && y < SCREEN_HEIGHT )
-        screen[SCREEN_WIDTH*y+x] = c;
-}
-    
-
-void DrawRect( unsigned char *screen, char c, int x, int y, int width, int height ) {
-    for ( int j = 0; j < height; j++ ) {
-        for ( int i = 0; i < width; i++ ) {
-            DrawChar(screen, c, x+i, y+j);
-        }
-    }
-}
-
-unsigned char CollisionPointRect( float x, float y, int rx, int ry, int rwidth, int rheight ) { // I would normally package vec2s and rects, but not here
-    return rx <= x && x <= rx+rwidth &&
-           ry <= y && y <= ry+rheight;
-}
+#include "engine.h"
 
 // Game specific
-#define GRAVITY              0.1f
-#define RESET_DELAY          500
+#define FPS             45
+#define FRAMETIME       (1000 / FPS)
+#define GRAVITY         0.1f
+#define RESET_DELAY     500
 
-#define FLAPPY_GLYPH         '%'
-#define FLAPPY_X             30
-#define FLAPPY_FLAP_ACC      0.5f
+#define FLAPPY_GLYPH    '%'
+#define FLAPPY_X        30
+#define FLAPPY_FLAP_ACC 0.5f
 
-#define PIPE_GLYPH           '#'
-#define NUM_OF_PIPES         5
-#define PIPE_X_SPACING       (SCREEN_WIDTH / NUM_OF_PIPES)
-#define PIPE_GAP_SIZE        5
-#define PIPE_TD_PADDING      10                            // The padding between possible gaps and the ceiling/floor            
-#define PIPE_WIDTH           3
-#define PIPE_SPEED           0.24f;
+#define PIPE_GLYPH      '#'
+#define NUM_OF_PIPES    5
+#define PIPE_X_SPACING  (SCREEN_WIDTH / NUM_OF_PIPES)
+#define PIPE_GAP_SIZE   5
+#define PIPE_TD_PADDING 10                            // The padding between possible gaps and the ceiling/floor            
+#define PIPE_WIDTH      3
+#define PIPE_SPEED      0.24f;
 
 
 
@@ -103,10 +71,8 @@ void Reset( pipe *pipes, int *nextPipe, unsigned int *score ) {
 
 int mainCRTStartup() {
     // Initialize screen
-    unsigned char screen[SCREEN_SIZE] = { 0 };
-    HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-    DWORD dwBytesWritten;
-    SetConsoleActiveScreenBuffer(hConsole);
+    Surface screen[SCREEN_SIZE] = {0};
+    InitConsole();
 
     pipe pipes[NUM_OF_PIPES];
     int nextPipe;
@@ -129,7 +95,7 @@ int mainCRTStartup() {
         if ( flappy.y >= SCREEN_HEIGHT )
             Reset(pipes, &nextPipe, &score);
 
-        ClearScreen();
+        ClearScreen(screen);
 
         // Pipes
         for ( int i = 0; i < NUM_OF_PIPES; i++ ) {
@@ -160,10 +126,10 @@ int mainCRTStartup() {
         DrawChar( screen, FLAPPY_GLYPH, FLAPPY_X, (int)flappy.y );
         wsprintf(screen+SCREEN_WIDTH+1, "SCORE: %u", score); // Unsafe but cool
 
-        WriteConsoleOutputCharacter(hConsole, screen, SCREEN_SIZE, (COORD){0,0}, &dwBytesWritten); // Update screen
+        UpdateConsole(screen); // Update screen
         Sleep(FRAMETIME);
     }
     
 
-    CloseHandle(hConsole);
+    CloseConsole();
 }

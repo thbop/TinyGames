@@ -1,4 +1,4 @@
 @echo off
-cl /c /O1 /GS- /DNDEBUG /Foa.obj a.c
-crinkler /OUT:a.exe a.obj kernel32.lib user32.lib
-rm a.obj
+cl /c /O1 /GS- /DNDEBUG /Fo %1.obj %1.c
+crinkler /OUT:%1.exe %1.obj kernel32.lib user32.lib
+rm %1.obj
