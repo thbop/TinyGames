@@ -1,20 +1,21 @@
 #include <windows.h>
+#include <stdlib.h>
 #include <string.h>
 
 // Application stuff
-#define SCREEN_WIDTH         120 // Win 10 is probably 80
-#define SCREEN_HEIGHT        30
-#define SCREEN_SIZE          SCREEN_WIDTH*SCREEN_HEIGHT
-#define FPS                  60
-#define FRAMETIME            (1000 / FPS)
+#define SCREEN_WIDTH  120 // Win 10 is probably 80
+#define SCREEN_HEIGHT 30
+#define SCREEN_SIZE   SCREEN_WIDTH*SCREEN_HEIGHT
+#define FPS           60
+#define FRAMETIME     (1000 / FPS)
 
 // Keys
-#define KeyDown(key)         GetAsyncKeyState(key)
-#define K_SPACE              0x20
+#define KeyDown(key)  GetAsyncKeyState(key)
+#define K_SPACE       0x20
 
 // Boolean
-#define true                 1
-#define false                0
+#define true          1
+#define false         0
 
 #define ClearScreen() memset(screen, ' ', SCREEN_SIZE)
 
@@ -41,13 +42,13 @@ void DrawRect( unsigned char *screen, char c, int x, int y, int width, int heigh
 #define FLAPPY_GLYPH         '%'
 #define FLAPPY_X             30
 #define FLAPPY_FLAP_ACC      0.5f;
-#define FLAPPY_JUMP_COOLDOWN 3
 #define GRAVITY              0.1f;
 
 #define PIPE_GLYPH           '#'
-#define NUM_OF_PIPES         10
+#define NUM_OF_PIPES         5
 #define PIPE_X_SPACING       (SCREEN_WIDTH / NUM_OF_PIPES)
-#define PIPE_GAP_SIZE        4
+#define PIPE_GAP_SIZE        5
+#define PIPE_TD_PADDING      10                            // The padding between possible gaps and the ceiling/floor            
 #define PIPE_WIDTH           3
 #define PIPE_SPEED           0.24f;
 
@@ -55,7 +56,6 @@ void DrawRect( unsigned char *screen, char c, int x, int y, int width, int heigh
 
 struct {
     float y, vy;
-    int cooldown;
 } flappy;
 
 typedef struct {
@@ -64,9 +64,14 @@ typedef struct {
 } pipe;
 
 void DrawPipe(unsigned char *screen, pipe p) {
-    DrawRect(screen, PIPE_GLYPH, (int)p.x, 0, PIPE_WIDTH, 12); // 12 should be p.openingY
-    DrawRect(screen, PIPE_GLYPH, (int)p.x, (12+PIPE_GAP_SIZE), PIPE_WIDTH, SCREEN_HEIGHT-(12+PIPE_GAP_SIZE));
+    DrawRect(screen, PIPE_GLYPH, (int)p.x, 0, PIPE_WIDTH, p.openingY);
+    DrawRect(screen, PIPE_GLYPH, (int)p.x, (p.openingY+PIPE_GAP_SIZE), PIPE_WIDTH, SCREEN_HEIGHT-(p.openingY+PIPE_GAP_SIZE));
 
+}
+
+void NewPipe( pipe *p ) {
+    p->x = SCREEN_WIDTH;
+    p->openingY = PIPE_TD_PADDING + rand() % (SCREEN_HEIGHT-PIPE_TD_PADDING);
 }
 
 
@@ -79,7 +84,7 @@ int mainCRTStartup() {
 
     // Flappy
     flappy.vy = 0.0f;
-    flappy.cooldown = 0;
+    // flappy.cooldown = 0;
     flappy.y = SCREEN_HEIGHT*0.5f;
 
     // Pipes
@@ -87,18 +92,16 @@ int mainCRTStartup() {
     for ( int i = 1; i < NUM_OF_PIPES; i++ )
         pipes[i].x = -1.0f;
     int nextPipe = 0;
-    pipes[0].x = SCREEN_WIDTH-10;
+    NewPipe(pipes); // Essentially &pipes[0]
 
     unsigned char running = true;
     while ( running ) {
         // Flappy
         flappy.vy += GRAVITY;
         if ( flappy.vy > 1.0f ) flappy.vy = 1.0f;
-        if ( KeyDown(K_SPACE) && !flappy.cooldown ) {
+        if ( KeyDown(K_SPACE) ) {
             flappy.vy = -FLAPPY_FLAP_ACC;
-            flappy.cooldown = FLAPPY_JUMP_COOLDOWN;
         }
-        if ( flappy.cooldown > 0 ) flappy.cooldown--;
 
         flappy.y += flappy.vy;
 
@@ -115,7 +118,7 @@ int mainCRTStartup() {
             if ( nextPipe < NUM_OF_PIPES-1 ) nextPipe++;
             else                             nextPipe = 0;
 
-            pipes[nextPipe].x = SCREEN_WIDTH;
+            NewPipe(pipes+nextPipe); // Essentially &pipes[nextPipe]
         }
 
         // Flappy
