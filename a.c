@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -92,10 +93,12 @@ void ResetPipes( pipe *pipes, int *nextPipe ) {
     NewPipe(pipes); // Essentially &pipes[0]
 }
 
-void Reset( pipe *pipes, int *nextPipe ) {
+void Reset( pipe *pipes, int *nextPipe, unsigned int *score ) {
     Sleep(RESET_DELAY);
     ResetFlappy();
     ResetPipes(pipes, nextPipe);
+
+    *score = 0;
 }
 
 int mainCRTStartup() {
@@ -108,12 +111,11 @@ int mainCRTStartup() {
     pipe pipes[NUM_OF_PIPES];
     int nextPipe;
 
+    unsigned int score;
 
-    Reset(pipes, &nextPipe);
+    Reset(pipes, &nextPipe, &score);
     
-
-    unsigned char running = true;
-    while ( running ) {
+    while ( true ) {
         // Flappy
         flappy.vy += GRAVITY;
         if ( flappy.vy > 1.0f ) flappy.vy = 1.0f;
@@ -124,7 +126,7 @@ int mainCRTStartup() {
         flappy.y += flappy.vy;
 
         if ( flappy.y >= SCREEN_HEIGHT )
-            Reset(pipes, &nextPipe);
+            Reset(pipes, &nextPipe, &score);
 
         ClearScreen();
 
@@ -134,13 +136,15 @@ int mainCRTStartup() {
             if ( pipes[i].x > 0.0f ) {
                 pipes[i].x -= PIPE_SPEED;
                 DrawPipe(screen, pipes[i]);
+
+                if ( (int)pipes[i].x == FLAPPY_X ) score++; // Not the best, but should work
             }
             // Check collisions
             if (
                 CollisionPointRect(FLAPPY_X, flappy.y, GetPipeTopRect(pipes[i])) ||
                 CollisionPointRect(FLAPPY_X, flappy.y, GetPipeBottomRect(pipes[i]))
             ) {
-                Reset(pipes, &nextPipe);
+                Reset(pipes, &nextPipe, &score);
             }
         }
         // Cycle pipes
@@ -153,6 +157,7 @@ int mainCRTStartup() {
 
         // Flappy
         DrawChar( screen, FLAPPY_GLYPH, FLAPPY_X, (int)flappy.y );
+        wsprintf(screen+SCREEN_WIDTH+1, "SCORE: %u", score); // Unsafe but cool
 
         WriteConsoleOutputCharacter(hConsole, screen, SCREEN_SIZE, (COORD){0,0}, &dwBytesWritten); // Update screen
         Sleep(FRAMETIME);
