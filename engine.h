@@ -25,7 +25,6 @@ typedef unsigned char Surface;
 
 // Keys
 #define KeyDown(key)  GetAsyncKeyState(key)
-#define K_SPACE       0x20
 
 // Boolean
 #define true          1

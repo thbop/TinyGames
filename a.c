@@ -85,7 +85,7 @@ int mainCRTStartup() {
         // Flappy
         flappy.vy += GRAVITY;
         if ( flappy.vy > 1.0f ) flappy.vy = 1.0f;
-        if ( KeyDown(K_SPACE) ) {
+        if ( KeyDown(VK_SPACE) ) {
             flappy.vy = -FLAPPY_FLAP_ACC;
         }
 

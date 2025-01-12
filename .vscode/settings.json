@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.pyx": "python",
+        "*.t": "plaintext",
+        "*.fsh": "glsl",
+        "windows.h": "c"
+    }
+}

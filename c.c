@@ -23,14 +23,19 @@ int mainCRTStartup() {
 
     mesh cube;
     GenerateCubeMesh(&cube);
-    cube.origin   = (vec3){ 0.0f, 0.0f, 100.0f };
-    cube.scale    = 16.0f;
+    cube.origin = (vec3){ 0.0f, 0.0f, 100.0f };
+    cube.scale  = 16.0f;
     
     while ( true ) {
+        if ( KeyDown(VK_RIGHT) ) camera.rotation.y -= 0.05f;
+        if ( KeyDown(VK_LEFT ) ) camera.rotation.y += 0.05f;
+        if ( KeyDown('W') )      camera.origin = vec3Add(camera.origin, CameraForward(0.0f));
+        if ( KeyDown('S') )      camera.origin = vec3Sub(camera.origin, CameraForward(0.0f));
+        if ( KeyDown('A') )      camera.origin = vec3Add(camera.origin, CameraForward(PI/2));
+        if ( KeyDown('D') )      camera.origin = vec3Sub(camera.origin, CameraForward(PI/2));
+
         ClearScreen(screen);
-        RotateMesh(&cube, 0.01f, 0);
-        RotateMesh(&cube, 0.03f, 1);
-        RotateMesh(&cube, 0.02f, 2);
+
         RenderMesh(screen, '#', &cube);
 
         
