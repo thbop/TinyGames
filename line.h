@@ -46,6 +46,16 @@ void _plotLineHigh(Surface *screen, char c, int x0, int y0, int x1, int y1) {
 }
 
 void DrawLine(Surface *screen, char c, int x0, int y0, int x1, int y1) {
+    if ( x0 == x1 ) {
+        if ( y1 > y0 ) for ( int y = y0; y < y1; y++ ) DrawChar(screen, c, x0, y);
+        else           for ( int y = y1; y < y0; y++ ) DrawChar(screen, c, x0, y);
+        return;
+    }
+    if ( y0 == y1 ) {
+        if ( x1 > x0 ) for ( int x = x0; x < x1; x++ ) DrawChar(screen, c, x, y0);
+        else           for ( int x = x1; x < x0; x++ ) DrawChar(screen, c, x, y0);
+        return;
+    }
     if ( abs(y1 - y0) < abs(x1 - x0) ) {
         if ( x0 > x1 ) _plotLineLow(screen, c, x1, y1, x0, y0);
         else           _plotLineLow(screen, c, x0, y0, x1, y1);

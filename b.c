@@ -85,15 +85,16 @@ void GenerateCubeMesh(mesh *m) {
 
 void RenderMesh(Surface *screen, char c, mesh *m) {
     for ( int q = 0; q < m->quadBufferSize; q++ ) {
-        vec2 v0 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer->id0], m->scale ), m->origin ) );
-        vec2 v1 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer->id1], m->scale ), m->origin ) );
-        vec2 v2 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer->id2], m->scale ), m->origin ) );
-        vec2 v3 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer->id3], m->scale ), m->origin ) );
+        vec2 v0 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id0], m->scale ), m->origin ) );
+        vec2 v1 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id1], m->scale ), m->origin ) );
+        vec2 v2 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id2], m->scale ), m->origin ) );
+        vec2 v3 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id3], m->scale ), m->origin ) );
 
         DrawLineV(screen, c, v0, v1);
         DrawLineV(screen, c, v1, v2);
         DrawLineV(screen, c, v2, v3);
         DrawLineV(screen, c, v3, v0);
+
     }
 }
 
@@ -102,12 +103,12 @@ int mainCRTStartup() {
     Surface screen[SCREEN_SIZE] = {0};
     InitConsole();
 
-    camera.focalLength = 10.0f;
+    camera.focalLength = 64.0f;
     // camera.origin      = (vec3){0.0f, 0.0f, 0.0f};
 
     mesh cube;
     GenerateCubeMesh(&cube);
-    cube.origin = (vec3){ 0.0f, 0.0f, 20.0f };
+    cube.origin = (vec3){ 0.0f, 0.0f, 100.0f };
     cube.scale  = 10.0f;
 
     
@@ -116,8 +117,9 @@ int mainCRTStartup() {
 
         RenderMesh(screen, '#', &cube);
         
-        // vec2 q = projectToCamera((vec3){0.0f, 0.0f, 20.0f});
+        // vec2 q = projectToCamera( vec3Add( vec3MultiplyValue( cube.vertBuffer[4], cube.scale ), cube.origin ) );
         // wsprintf(screen+SCREEN_WIDTH+1, "%d %d", (int)q.x, (int)q.y);
+        // DrawChar(screen, '@', (int)q.x, (int)q.y);
 
         UpdateConsole(screen); // Update screen
         Sleep(FRAMETIME);
