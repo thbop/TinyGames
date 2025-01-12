@@ -8,6 +8,8 @@ typedef struct {
     float x, y;
 } vec2;
 
+#define VEC2ZERO (vec2){0.0f, 0.0f}
+
 #define DrawLineV(screen, c, l0, l1) \
     DrawLine(screen, c, (int)l0.x, (int)l0.y, (int)l1.x, (int)l1.y )
 
@@ -15,8 +17,22 @@ typedef struct {
     float x, y, z;
 } vec3;
 
-vec3 vec3MultiplyValue(vec3 p, float v) {
-    return (vec3){ p.x * v, p.y * v, p.z * v };
+#define VEC3ZERO (vec3){0.0f, 0.0f, 0.0f}
+
+vec3 vec3Add(vec3 p, vec3 q) {
+    return (vec3){ p.x + q.x, p.y + q.y, p.z + q.z };
+}
+
+vec3 vec3Sub(vec3 p, vec3 q) {
+    return (vec3){ p.x - q.x, p.y - q.y, p.z - q.z };
+}
+
+// vec3 vec3MultiplyValue(vec3 p, float v) {
+//     return (vec3){ p.x * v, p.y * v, p.z * v };
+// }
+
+vec3 vec3Multiply(vec3 p, vec3 q) {
+    return (vec3){ p.x * q.x, p.y * q.y, p.z * q.z };
 }
 
 vec3 vec3Rotate(vec3 p, float theta, int axis) {
@@ -25,22 +41,10 @@ vec3 vec3Rotate(vec3 p, float theta, int axis) {
         sin_theta = sinf(theta),
         cos_theta = cosf(theta);
     switch (axis) {
-        case 0: return (vec3){ p.x, p.y*cos_theta-p.z*sin_theta, p.y*sin_theta+p.z*cos_theta };
-        case 1: return (vec3){ p.x*cos_theta + p.z*sin_theta, p.y, -p.x*sin_theta + p.z*cos_theta };
-        case 2: return (vec3){ p.x*cos_theta - p.y*sin_theta, p.x*sin_theta + p.y*cos_theta, p.z };
+        case 0: return (vec3){ p.x, p.y*cos_theta-p.z*sin_theta, p.y*sin_theta+p.z*cos_theta };      break;
+        case 1: return (vec3){ p.x*cos_theta + p.z*sin_theta, p.y, -p.x*sin_theta + p.z*cos_theta }; break;
+        case 2: return (vec3){ p.x*cos_theta - p.y*sin_theta, p.x*sin_theta + p.y*cos_theta, p.z };  break;
     }
-}
-
-// vec3 vec3Multiply(vec3 p, vec3 q) {
-//     return (vec3){ p.x * q.x, p.y * q.y, p.z * q.z };
-// }
-
-vec3 vec3Add(vec3 p, vec3 q) {
-    return (vec3){ p.x + q.x, p.y + q.y, p.z + q.z };
-}
-
-vec3 vec3Sub(vec3 p, vec3 q) {
-    return (vec3){ p.x - q.x, p.y - q.y, p.z - q.z };
 }
 
 struct {
@@ -75,10 +79,15 @@ typedef struct {
     vec3 *vertBuffer;
     size_t quadBufferSize;
     quad *quadBuffer;
-
-    vec3 origin;
-    float scale;
 } mesh;
+
+typedef struct {
+    mesh *m;
+    vec3
+        origin,
+        scale;
+        // Rotation if I need it
+} obj;
 
 void FreeMesh(mesh *m) {
     free(m->vertBuffer);
@@ -107,17 +116,30 @@ void GenerateCubeMesh(mesh *m) {
     m->quadBuffer[5]  = (quad){ 1, 2, 6, 5 };          // Right
 }
 
+void GenerateQuadMesh(mesh *m) {
+    m->vertBufferSize = 4;
+    m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*4);
+    m->vertBuffer[0]  = (vec3){-1.0f,  0.0f, -1.0f};   // Back Left
+    m->vertBuffer[1]  = (vec3){ 1.0f,  0.0f, -1.0f};   // Back Right
+    m->vertBuffer[2]  = (vec3){ 1.0f,  0.0f,  1.0f};   // Front Right
+    m->vertBuffer[3]  = (vec3){-1.0f,  0.0f,  1.0f};   // Front Left
+
+    m->quadBufferSize = 1;
+    m->quadBuffer     = (quad*)malloc(sizeof(quad));
+    m->quadBuffer[0]  = (quad){ 0, 1, 2, 3 };
+}
+
 void RotateMesh(mesh *m, float theta, int axis) {
     for ( size_t v = 0; v < m->vertBufferSize; v++ )
         m->vertBuffer[v] = vec3Rotate(m->vertBuffer[v], theta, axis);
 }
 
-void RenderMesh(Surface *screen, char c, mesh *m) {
-    for ( size_t q = 0; q < m->quadBufferSize; q++ ) {
-        vec2 pv0 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id0], m->scale ), m->origin ) );
-        vec2 pv1 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id1], m->scale ), m->origin ) );
-        vec2 pv2 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id2], m->scale ), m->origin ) );
-        vec2 pv3 = projectToCamera( vec3Add( vec3MultiplyValue( m->vertBuffer[m->quadBuffer[q].id3], m->scale ), m->origin ) );
+void RenderObject(Surface *screen, char c, obj *o) {
+    for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {
+        vec2 pv0 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id0], o->scale ), o->origin ) );
+        vec2 pv1 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id1], o->scale ), o->origin ) );
+        vec2 pv2 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id2], o->scale ), o->origin ) );
+        vec2 pv3 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id3], o->scale ), o->origin ) );
 
         DrawLineV(screen, c, pv0, pv1);
         DrawLineV(screen, c, pv1, pv2);

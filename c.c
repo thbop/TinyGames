@@ -12,6 +12,37 @@
 // Game specific
 #define FPS       60
 #define FRAMETIME (1000 / FPS)
+#define MAP_WIDTH 16
+#define MAP_LENGTH 16
+#define MAP_AREA (MAP_WIDTH*MAP_LENGTH)
+
+
+mesh cube; //, quadM;
+
+obj *loadMap(const char *map, int *objBufferSize) {
+    *objBufferSize = 0;
+    for ( int i = 0; i < MAP_AREA; i++ ) if ( map[i] == '#' ) (*objBufferSize)++;
+
+    obj *objs = (obj*)malloc(sizeof(obj)*(*objBufferSize));
+
+    int objID = 0;
+
+    for ( int j = 0; j < MAP_LENGTH; j++ ) {
+        for ( int i = 0; i < MAP_WIDTH; i++ ) {
+            switch ( map[j*MAP_WIDTH+i] ) {
+                case '#':
+                    objs[objID] = (obj){
+                        .m = &cube,
+                        .origin = (vec3){i*20.0f, 0.0f, j*20.0f},
+                        .scale = (vec3){10.0f, 10.0f, 10.0f}
+                    };
+                    objID++;
+                    break;
+            }
+        }
+    }
+    return objs;
+}
 
 int mainCRTStartup() {
     // Initialize screen
@@ -21,10 +52,29 @@ int mainCRTStartup() {
     camera.focalLength = 64.0f;
     camera.origin = camera.rotation = (vec3){0.0f, 0.0f, 0.0f};
 
-    mesh cube;
     GenerateCubeMesh(&cube);
-    cube.origin = (vec3){ 0.0f, 0.0f, 100.0f };
-    cube.scale  = 16.0f;
+    // GenerateQuadMesh(&quadM);
+
+    const char map[MAP_AREA] =
+        "................"
+        "..#............."
+        "................"
+        "................"
+        "................"
+        ".....####......."
+        ".....#..#......."
+        ".....#..#......."
+        ".....####......."
+        "................"
+        "................"
+        "................"
+        "........##......"
+        "........##......"
+        "................"
+        "................";
+
+    int objBufferSize;
+    obj *objs = loadMap(map, &objBufferSize);
     
     while ( true ) {
         if ( KeyDown(VK_RIGHT) ) camera.rotation.y -= 0.05f;
@@ -36,7 +86,10 @@ int mainCRTStartup() {
 
         ClearScreen(screen);
 
-        RenderMesh(screen, '#', &cube);
+        for ( int i = 0; i < objBufferSize; i++ ) {
+            RenderObject(screen, '#', &objs[i]);
+        }
+            
 
         
         // vec2 q = projectToCamera( vec3Add( vec3MultiplyValue( cube.vertBuffer[4], cube.scale ), cube.origin ) );
@@ -46,7 +99,8 @@ int mainCRTStartup() {
         UpdateConsole(screen); // Update screen
         Sleep(FRAMETIME);
     }
-    
+    free(objs);
     FreeMesh(&cube);
+    // FreeMesh(&quadM);
     CloseConsole();
 }

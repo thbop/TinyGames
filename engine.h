@@ -27,8 +27,8 @@ typedef unsigned char Surface;
 #define KeyDown(key)  GetAsyncKeyState(key)
 
 // Boolean
-#define true          1
-#define false         0
+#define true  1
+#define false 0
 
 #define ClearScreen(screen) memset(screen, ' ', SCREEN_SIZE)
 
