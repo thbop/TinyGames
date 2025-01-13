@@ -47,6 +47,9 @@ vec3 vec3Rotate(vec3 p, float theta, int axis) {
     }
 }
 
+#define CAMERA_CLIP_NEAR 0.0f
+#define CAMERA_CLIP_FAR  1000.0f
+
 struct {
     vec3 origin, rotation;
     float focalLength;
@@ -57,17 +60,30 @@ vec3 CameraForward(float offset) {
     return (vec3){ -sinf(theta), 0.0f, cosf(theta) };
 }
 
-vec2 projectToCamera(vec3 p) {
-    p = vec3Sub(p, camera.origin);
-    p = vec3Rotate(p, camera.rotation.x, 0);
-    p = vec3Rotate(p, camera.rotation.y, 1);
-    p = vec3Rotate(p, camera.rotation.z, 2);
+vec3 toCameraSpace(vec3 p) {
+    p =    vec3Sub(p, camera.origin);
+    p =    vec3Rotate(p, camera.rotation.x, 0);
+    p =    vec3Rotate(p, camera.rotation.y, 1);
+    return vec3Rotate(p, camera.rotation.z, 2);
+}
 
+unsigned char inViewFrustum(vec3 p) {
+    if (
+        p.z < CAMERA_CLIP_NEAR                              ||
+        p.z > CAMERA_CLIP_FAR                               ||
+        p.z < fabsf(camera.focalLength*p.x) / SCREEN_WIDTH  ||
+        p.z < fabsf(camera.focalLength*p.y) / SCREEN_HEIGHT
+    ) return false;
+    return true;
+}
+
+vec2 projectToScreen(vec3 p) {
     float z = camera.focalLength / p.z;
-    return (vec2){
+    vec2 projected = (vec2){
         z * p.x + HALF_SCREEN_WIDTH,
         z * p.y + HALF_SCREEN_HEIGHT,
     };
+    return projected;
 }
 
 typedef struct {
@@ -136,15 +152,26 @@ void RotateMesh(mesh *m, float theta, int axis) {
 
 void RenderObject(Surface *screen, char c, obj *o) {
     for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {
-        vec2 pv0 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id0], o->scale ), o->origin ) );
-        vec2 pv1 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id1], o->scale ), o->origin ) );
-        vec2 pv2 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id2], o->scale ), o->origin ) );
-        vec2 pv3 = projectToCamera( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id3], o->scale ), o->origin ) );
+        // Camera space quad
+        vec3 cs0 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id0], o->scale ), o->origin ) );
+        vec3 cs1 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id1], o->scale ), o->origin ) );
+        vec3 cs2 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id2], o->scale ), o->origin ) );
+        vec3 cs3 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id3], o->scale ), o->origin ) );
 
-        DrawLineV(screen, c, pv0, pv1);
-        DrawLineV(screen, c, pv1, pv2);
-        DrawLineV(screen, c, pv2, pv3);
-        DrawLineV(screen, c, pv3, pv0);
+        // If at least one point is in the view frustum
+        if ( inViewFrustum(cs0) || inViewFrustum(cs1) || inViewFrustum(cs2) || inViewFrustum(cs3) ) {
+            // Project draw points
+            vec2 dp0 = projectToScreen(cs0);
+            vec2 dp1 = projectToScreen(cs1);
+            vec2 dp2 = projectToScreen(cs2);
+            vec2 dp3 = projectToScreen(cs3);
+
+            // Draw quad
+            DrawLineV(screen, c, dp0, dp1);
+            DrawLineV(screen, c, dp1, dp2);
+            DrawLineV(screen, c, dp2, dp3);
+            DrawLineV(screen, c, dp3, dp0);
+        }
     }
 }
 

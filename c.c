@@ -84,6 +84,9 @@ int mainCRTStartup() {
         if ( KeyDown('A') )      camera.origin = vec3Add(camera.origin, CameraForward(PI/2));
         if ( KeyDown('D') )      camera.origin = vec3Sub(camera.origin, CameraForward(PI/2));
 
+        // if ( KeyDown(VK_UP) ) camera.focalLength++;
+        // if ( KeyDown(VK_DOWN) ) camera.focalLength--;
+
         ClearScreen(screen);
 
         for ( int i = 0; i < objBufferSize; i++ ) {
