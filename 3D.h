@@ -102,7 +102,7 @@ typedef struct {
     vec3
         origin,
         scale;
-        // Rotation if I need it
+        // rotation;
 } obj;
 
 void FreeMesh(mesh *m) {
@@ -122,33 +122,45 @@ void GenerateCubeMesh(mesh *m) {
     m->vertBuffer[6]  = (vec3){ 1.0f,  1.0f,  1.0f};   // Top Front Right
     m->vertBuffer[7]  = (vec3){-1.0f,  1.0f,  1.0f};   // Top Front Left
 
-    m->quadBufferSize = 6;
-    m->quadBuffer     = (quad*)malloc(sizeof(quad)*6);
+    m->quadBufferSize = 4;                             // actually 6 but we can cheat since we're dealing with wireframes
+    m->quadBuffer     = (quad*)malloc(sizeof(quad)*4);
     m->quadBuffer[0]  = (quad){ 0, 1, 2, 3 };          // Bottom
     m->quadBuffer[1]  = (quad){ 0, 1, 5, 4 };          // Back
     m->quadBuffer[2]  = (quad){ 4, 5, 6, 7 };          // Top
     m->quadBuffer[3]  = (quad){ 3, 2, 6, 7 };          // Front
-    m->quadBuffer[4]  = (quad){ 0, 3, 7, 4 };          // Left
-    m->quadBuffer[5]  = (quad){ 1, 2, 6, 5 };          // Right
+    // m->quadBuffer[4]  = (quad){ 0, 3, 7, 4 };          // Left
+    // m->quadBuffer[5]  = (quad){ 1, 2, 6, 5 };          // Right
 }
 
-void GenerateQuadMesh(mesh *m) {
-    m->vertBufferSize = 4;
-    m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*4);
-    m->vertBuffer[0]  = (vec3){-1.0f,  0.0f, -1.0f};   // Back Left
-    m->vertBuffer[1]  = (vec3){ 1.0f,  0.0f, -1.0f};   // Back Right
-    m->vertBuffer[2]  = (vec3){ 1.0f,  0.0f,  1.0f};   // Front Right
-    m->vertBuffer[3]  = (vec3){-1.0f,  0.0f,  1.0f};   // Front Left
+// void GenerateQuadMesh(mesh *m) {
+//     m->vertBufferSize = 4;
+//     m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*4);
+//     m->vertBuffer[0]  = (vec3){-1.0f,  0.0f, -1.0f};   // Back Left
+//     m->vertBuffer[1]  = (vec3){ 1.0f,  0.0f, -1.0f};   // Back Right
+//     m->vertBuffer[2]  = (vec3){ 1.0f,  0.0f,  1.0f};   // Front Right
+//     m->vertBuffer[3]  = (vec3){-1.0f,  0.0f,  1.0f};   // Front Left
 
-    m->quadBufferSize = 1;
-    m->quadBuffer     = (quad*)malloc(sizeof(quad));
-    m->quadBuffer[0]  = (quad){ 0, 1, 2, 3 };
-}
+//     m->quadBufferSize = 1;
+//     m->quadBuffer     = (quad*)malloc(sizeof(quad));
+//     m->quadBuffer[0]  = (quad){ 0, 1, 2, 3 };
+// }
 
-void RotateMesh(mesh *m, float theta, int axis) {
-    for ( size_t v = 0; v < m->vertBufferSize; v++ )
-        m->vertBuffer[v] = vec3Rotate(m->vertBuffer[v], theta, axis);
-}
+// void GeneratePyramidMesh(mesh *m) {
+//     m->vertBufferSize = 5;
+//     m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*5);
+//     m->vertBuffer[0]  = (vec3){-1.0f, -1.0f, -1.0f};   // Back Left
+//     m->vertBuffer[1]  = (vec3){ 1.0f, -1.0f, -1.0f};   // Back Right
+//     m->vertBuffer[2]  = (vec3){ 1.0f, -1.0f,  1.0f};   // Front Right
+//     m->vertBuffer[3]  = (vec3){-1.0f, -1.0f,  1.0f};   // Front Left
+//     m->vertBuffer[4]  = (vec3){ 0.0f,  1.0f,  0.0f};   // Top
+
+//     m->quadBufferSize = 3;
+//     m->quadBuffer     = (quad*)malloc(sizeof(quad)*3);
+//     m->quadBuffer[0]  = (quad){ 4, 3, 0, 1 };
+//     m->quadBuffer[1]  = (quad){ 4, 2, 1, 0 };
+//     m->quadBuffer[1]  = (quad){ 0, 1, 2, 3 };
+// }
+
 
 void RenderObject(Surface *screen, char c, obj *o) {
     for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {

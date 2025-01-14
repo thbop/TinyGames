@@ -32,9 +32,10 @@ obj *loadMap(const char *map, int *objBufferSize) {
             switch ( map[j*MAP_WIDTH+i] ) {
                 case '#':
                     objs[objID] = (obj){
-                        .m = &cube,
-                        .origin = (vec3){i*20.0f, 0.0f, j*20.0f},
-                        .scale = (vec3){10.0f, 10.0f, 10.0f}
+                        .m         = &cube,
+                        .origin    = (vec3){i*20.0f, 0.0f, j*20.0f},
+                        .scale     = (vec3){10.0f, 10.0f, 10.0f},
+                        // .rotation  = (vec3){0.0f, 0.0f, 0.0f}
                     };
                     objID++;
                     break;
@@ -57,24 +58,26 @@ int mainCRTStartup() {
 
     const char map[MAP_AREA] =
         "................"
-        "..#............."
         "................"
         "................"
         "................"
-        ".....####......."
-        ".....#..#......."
-        ".....#..#......."
-        ".....####......."
         "................"
         "................"
         "................"
-        "........##......"
-        "........##......"
+        "....#...#......."
+        "................"
+        "......#........."
+        "................"
+        "....#...#......."
+        "................"
+        "................"
         "................"
         "................";
 
     int objBufferSize;
     obj *objs = loadMap(map, &objBufferSize);
+
+    objs[2].scale = (vec3){5.0f, 5.0f, 5.0f};
     
     while ( true ) {
         if ( KeyDown(VK_RIGHT) ) camera.rotation.y -= 0.05f;
@@ -88,6 +91,7 @@ int mainCRTStartup() {
         // if ( KeyDown(VK_DOWN) ) camera.focalLength--;
 
         ClearScreen(screen);
+
 
         for ( int i = 0; i < objBufferSize; i++ ) {
             RenderObject(screen, '#', &objs[i]);
