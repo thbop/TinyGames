@@ -123,8 +123,25 @@ void GenerateCubeMesh(mesh *m) {
 //     m->quadBuffer[1]  = (quad){ 0, 1, 2, 3 };
 // }
 
+void GeneratePortalMesh(mesh *m) {
+    m->vertBufferSize = 6;
+    m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*6);
+    m->vertBuffer[0]  = (vec3){ 0.0f,  0.7f,  0.0f};
+    m->vertBuffer[1]  = (vec3){ 0.5f,  0.5f,  0.0f};
+    m->vertBuffer[2]  = (vec3){ 0.5f, -0.5f,  0.0f};
+    m->vertBuffer[3]  = (vec3){ 0.0f, -0.7f,  0.0f};
+    m->vertBuffer[4]  = (vec3){-0.5f, -0.5f,  0.0f};
+    m->vertBuffer[5]  = (vec3){-0.5f,  0.5f,  0.0f};
 
-void RenderObject(Surface *screen, char c, obj *o) {
+    m->quadBufferSize = 2;
+    m->quadBuffer     = (quad*)malloc(sizeof(quad)*2);
+    m->quadBuffer[0]  = (quad){ 0, 3, 4, 5 };
+    m->quadBuffer[1]  = (quad){ 0, 1, 2, 3 };
+
+}
+
+
+void RenderObject(Surface *screen, obj *o) {
     for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {
         // Camera space quad
         vec3 cs0 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id0], o->scale ), o->origin ) );

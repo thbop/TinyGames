@@ -106,7 +106,7 @@ void _DrawSpansBetweenEdges( Surface *screen, char c, TriangleEdge edge0, Triang
     float factor1     = 0.0f;
 
     for ( int y = edge1.u.y; y < edge1.v.y; y++ ) {
-        TriangleSpan span = GetTriangleSpan( edge0.u.x + e0xdiff * factor0, edge1.u.x + e1xdiff * factor1 );
+        TriangleSpan span = GetTriangleSpan( edge0.u.x + (int)(e0xdiff * factor0), edge1.u.x + (int)(e1xdiff * factor1) );
         _DrawSpan(screen, c, span, y);
 
         factor0 += factorStep0;

@@ -16,11 +16,12 @@
 #define MAP_AREA (MAP_WIDTH*MAP_LENGTH)
 
 
-mesh cube; //, quadM;
+mesh cube, portal;
 
-obj *loadMap(const char *map, int *objBufferSize) {
+obj *loadMap(const char *map, int *objBufferSize, int objBufferFreeSize) {
     *objBufferSize = 0;
     for ( int i = 0; i < MAP_AREA; i++ ) if ( map[i] == '#' ) (*objBufferSize)++;
+    objBufferSize += objBufferFreeSize;
 
     obj *objs = (obj*)malloc(sizeof(obj)*(*objBufferSize));
 
@@ -44,6 +45,12 @@ obj *loadMap(const char *map, int *objBufferSize) {
     return objs;
 }
 
+int objSortComp(const void *a, const void *b) {
+    return
+        vec3LengthSquared( vec3Sub(camera.origin, ((obj*)a)->origin) ) <
+        vec3LengthSquared( vec3Sub(camera.origin, ((obj*)b)->origin) );
+}
+
 int mainCRTStartup() {
     // Initialize screen
     Surface screen[SCREEN_SIZE] = {0};
@@ -53,7 +60,7 @@ int mainCRTStartup() {
     camera.origin = camera.rotation = (vec3){0.0f, 0.0f, 0.0f};
 
     GenerateCubeMesh(&cube);
-    // GenerateQuadMesh(&quadM);
+    GeneratePortalMesh(&portal);
 
     const char map[MAP_AREA] =
         "................"
@@ -64,9 +71,9 @@ int mainCRTStartup() {
         "................"
         "................"
         "....#...#......."
-        "................"
-        "......#........."
-        "................"
+        "....#..........."
+        "....#..........."
+        "....#..........."
         "....#...#......."
         "................"
         "................"
@@ -74,31 +81,28 @@ int mainCRTStartup() {
         "................";
 
     int objBufferSize;
-    obj *objs = loadMap(map, &objBufferSize);
+    obj *objs = loadMap(map, &objBufferSize, 2);
 
-    objs[2].scale = (vec3){5.0f, 5.0f, 5.0f};
-    
-    while ( true ) {
-        if ( KeyDown(VK_RIGHT) ) camera.rotation.y -= 0.05f;
-        if ( KeyDown(VK_LEFT ) ) camera.rotation.y += 0.05f;
-        if ( KeyDown('W') )      camera.origin = vec3Add(camera.origin, CameraForward(0.0f));
-        if ( KeyDown('S') )      camera.origin = vec3Sub(camera.origin, CameraForward(0.0f));
-        if ( KeyDown('A') )      camera.origin = vec3Add(camera.origin, CameraForward(PI/2));
-        if ( KeyDown('D') )      camera.origin = vec3Sub(camera.origin, CameraForward(PI/2));
+    unsigned char running = true;
+    while ( running ) {
+        if ( KeyDown(VK_ESCAPE) ) running = false;
+        if ( KeyDown(VK_RIGHT) )  camera.rotation.y -= 0.05f;
+        if ( KeyDown(VK_LEFT ) )  camera.rotation.y += 0.05f;
+        if ( KeyDown('W') )       camera.origin = vec3Add(camera.origin, CameraForward(0.0f));
+        if ( KeyDown('S') )       camera.origin = vec3Sub(camera.origin, CameraForward(0.0f));
+        if ( KeyDown('A') )       camera.origin = vec3Add(camera.origin, CameraForward(PI/2));
+        if ( KeyDown('D') )       camera.origin = vec3Sub(camera.origin, CameraForward(PI/2));
 
         // if ( KeyDown(VK_UP) ) camera.focalLength++;
         // if ( KeyDown(VK_DOWN) ) camera.focalLength--;
 
         ClearScreen(screen);
 
-
+        qsort(objs, objBufferSize, sizeof(obj), objSortComp);
         for ( int i = 0; i < objBufferSize; i++ ) {
-            RenderObject(screen, '#', &objs[i]);
+            RenderObject(screen, &objs[i]);
         }
 
-            
-
-        
         // vec2 q = projectToCamera( vec3Add( vec3MultiplyValue( cube.vertBuffer[4], cube.scale ), cube.origin ) );
         // wsprintf(screen+SCREEN_WIDTH+1, "%d %d %d", (int)p.x, (int)p.y, (int)p.z);
         // DrawChar(screen, '@', (int)q.x, (int)q.y);
@@ -108,6 +112,6 @@ int mainCRTStartup() {
     }
     free(objs);
     FreeMesh(&cube);
-    // FreeMesh(&quadM);
+    FreeMesh(&portal);
     CloseConsole();
 }

@@ -1,2 +1,4 @@
 
 *.exe
+convert_from_obj.py
+c_lvl0.obj

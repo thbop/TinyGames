@@ -57,4 +57,8 @@ vec3 vec3Cross(vec3 p, vec3 q) {
     };
 }
 
+float vec3LengthSquared( vec3 p ) {
+    return p.x*p.x + p.y*p.y + p.z*p.z;
+}
+
 #endif
