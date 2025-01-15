@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <math.h>
-
 #include "engine.h"
-#include "line.h"
+#include "vec23.h"
+#include "shapes.h"
 #include "3D.h"
 
 // Game specific
@@ -96,6 +95,7 @@ int mainCRTStartup() {
         for ( int i = 0; i < objBufferSize; i++ ) {
             RenderObject(screen, '#', &objs[i]);
         }
+
             
 
         
