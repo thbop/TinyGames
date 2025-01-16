@@ -25,9 +25,9 @@ vec3 vec3Sub(vec3 p, vec3 q) {
     return (vec3){ p.x - q.x, p.y - q.y, p.z - q.z };
 }
 
-// vec3 vec3MultiplyValue(vec3 p, float v) {
-//     return (vec3){ p.x * v, p.y * v, p.z * v };
-// }
+vec3 vec3MultiplyValue(vec3 p, float v) {
+    return (vec3){ p.x * v, p.y * v, p.z * v };
+}
 
 vec3 vec3Multiply(vec3 p, vec3 q) {
     return (vec3){ p.x * q.x, p.y * q.y, p.z * q.z };
@@ -39,9 +39,17 @@ vec3 vec3Rotate(vec3 p, float theta, int axis) {
         sin_theta = sinf(theta),
         cos_theta = cosf(theta);
     switch (axis) {
-        case 0: return (vec3){ p.x, p.y*cos_theta-p.z*sin_theta, p.y*sin_theta+p.z*cos_theta };      break;
-        case 1: return (vec3){ p.x*cos_theta + p.z*sin_theta, p.y, -p.x*sin_theta + p.z*cos_theta }; break;
-        case 2: return (vec3){ p.x*cos_theta - p.y*sin_theta, p.x*sin_theta + p.y*cos_theta, p.z };  break;
+        case 0: return (vec3){ p.x, p.y*cos_theta-p.z*sin_theta, p.y*sin_theta+p.z*cos_theta };
+        case 1: return (vec3){ p.x*cos_theta + p.z*sin_theta, p.y, -p.x*sin_theta + p.z*cos_theta };
+        case 2: return (vec3){ p.x*cos_theta - p.y*sin_theta, p.x*sin_theta + p.y*cos_theta, p.z };
+    }
+}
+
+float vec3GetRotation(vec3 p, int axis) {
+    switch (axis) {
+        case 0: return atan2f( p.y, p.z );
+        case 1: return atan2f( p.x, p.z );
+        case 2: return atan2f( p.y, p.x );
     }
 }
 

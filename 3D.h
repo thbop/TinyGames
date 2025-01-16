@@ -63,9 +63,11 @@ typedef struct {
     mesh *m;
     vec3
         origin,
-        scale;
-        // rotation;
+        scale,
+        rotation;
+    char outline, fill;
 } obj;
+
 
 void FreeMesh(mesh *m) {
     free(m->vertBuffer);
@@ -123,38 +125,29 @@ void GenerateCubeMesh(mesh *m) {
 //     m->quadBuffer[1]  = (quad){ 0, 1, 2, 3 };
 // }
 
-void GeneratePortalMesh(mesh *m) {
-    m->vertBufferSize = 6;
-    m->vertBuffer     = (vec3*)malloc(sizeof(vec3)*6);
-    m->vertBuffer[0]  = (vec3){ 0.0f,  0.7f,  0.0f};
-    m->vertBuffer[1]  = (vec3){ 0.5f,  0.5f,  0.0f};
-    m->vertBuffer[2]  = (vec3){ 0.5f, -0.5f,  0.0f};
-    m->vertBuffer[3]  = (vec3){ 0.0f, -0.7f,  0.0f};
-    m->vertBuffer[4]  = (vec3){-0.5f, -0.5f,  0.0f};
-    m->vertBuffer[5]  = (vec3){-0.5f,  0.5f,  0.0f};
 
-    m->quadBufferSize = 2;
-    m->quadBuffer     = (quad*)malloc(sizeof(quad)*2);
-    m->quadBuffer[0]  = (quad){ 0, 3, 4, 5 };
-    m->quadBuffer[1]  = (quad){ 0, 1, 2, 3 };
 
+vec3 toWorldSpace(vec3 p, obj *o) {
+    p = vec3Rotate(p, o->rotation.x, 0);
+    p = vec3Rotate(p, o->rotation.y, 1);
+    p = vec3Rotate(p, o->rotation.z, 2);
+    return vec3Add( vec3Multiply( p, o->scale ), o->origin );
 }
-
 
 void RenderObject(Surface *screen, obj *o) {
     for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {
         // Camera space quad
-        vec3 cs0 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id0], o->scale ), o->origin ) );
-        vec3 cs1 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id1], o->scale ), o->origin ) );
-        vec3 cs2 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id2], o->scale ), o->origin ) );
-        vec3 cs3 = toCameraSpace( vec3Add( vec3Multiply( o->m->vertBuffer[o->m->quadBuffer[q].id3], o->scale ), o->origin ) );
+        vec3 cs0 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id0], o ) );
+        vec3 cs1 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id1], o ) );
+        vec3 cs2 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id2], o ) );
+        vec3 cs3 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id3], o ) );
 
         vec3 n   = vec3Cross( vec3Sub(cs0, cs1), vec3Sub(cs0, cs3) );
 
         // If at least one point is in the view frustum
         if (
             ( inViewFrustum(cs0) || inViewFrustum(cs1) || inViewFrustum(cs2) || inViewFrustum(cs3) ) &&
-            n.z > 0.0f // dot(n, vec3(0,0,1))
+            n.z > 0.0f // 0.0f > vec3Dot(n, vec3Sub(cs0, camera.origin))
         ) {
             // Project draw points
             vec2 dp0 = projectToScreen(cs0);
@@ -163,13 +156,13 @@ void RenderObject(Surface *screen, obj *o) {
             vec2 dp3 = projectToScreen(cs3);
 
             // Draw quad
-            DrawTriangle(screen, '.', dp0, dp1, dp2);
-            DrawTriangle(screen, '.', dp2, dp3, dp0);
+            DrawTriangle(screen, o->fill, dp0, dp1, dp2);
+            DrawTriangle(screen, o->fill, dp2, dp3, dp0);
 
-            DrawLineV(screen, '#', dp0, dp1);
-            DrawLineV(screen, '#', dp1, dp2);
-            DrawLineV(screen, '#', dp2, dp3);
-            DrawLineV(screen, '#', dp3, dp0);
+            DrawLineV(screen, o->outline, dp0, dp1);
+            DrawLineV(screen, o->outline, dp1, dp2);
+            DrawLineV(screen, o->outline, dp2, dp3);
+            DrawLineV(screen, o->outline, dp3, dp0);
 
         }
     }
