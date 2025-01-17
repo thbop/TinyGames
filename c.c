@@ -5,6 +5,8 @@
 
 #include "engine.h"
 #include "vec23.h"
+
+#define MASKED_DRAWING
 #include "shapes.h"
 #include "3D.h"
 
@@ -84,6 +86,7 @@ obj *loadMap(const char *map, int *objBufferSize, int objBufferFreeSize) {
     }
     return objs;
 }
+Camera camera, portal1Camera, portal2Camera;
 
 int objSortComp(const void *a, const void *b) {
     return
@@ -96,8 +99,13 @@ int mainCRTStartup() {
     Surface screen[SCREEN_SIZE] = {0};
     InitConsole();
 
-    camera.focalLength = 64.0f;
-    camera.origin = camera.rotation = (vec3){0.0f, 0.0f, 0.0f};
+    camera.focalLength        =
+    portal1Camera.focalLength = 
+    portal2Camera.focalLength = 64.0f;
+
+    camera.origin        = camera.rotation        =
+    portal1Camera.origin = portal1Camera.rotation =
+    portal2Camera.origin = portal2Camera.rotation = (vec3){0.0f, 0.0f, 0.0f};
 
     GenerateCubeMesh(&cube);
     GeneratePortalMesh(&portal);
@@ -131,19 +139,21 @@ int mainCRTStartup() {
         if ( KeyDown(VK_ESCAPE) ) running = false;
         if ( KeyDown(VK_RIGHT) )  camera.rotation.y -= 0.05f;
         if ( KeyDown(VK_LEFT ) )  camera.rotation.y += 0.05f;
-        if ( KeyDown('W') )       camera.origin = vec3Add(camera.origin, CameraForward(0.0f));
-        if ( KeyDown('S') )       camera.origin = vec3Sub(camera.origin, CameraForward(0.0f));
-        if ( KeyDown('A') )       camera.origin = vec3Add(camera.origin, CameraForward(PI/2));
-        if ( KeyDown('D') )       camera.origin = vec3Sub(camera.origin, CameraForward(PI/2));
+        if ( KeyDown('W') )       camera.origin = vec3Add(camera.origin, CameraForward(&camera, 0.0f));
+        if ( KeyDown('S') )       camera.origin = vec3Sub(camera.origin, CameraForward(&camera, 0.0f));
+        if ( KeyDown('A') )       camera.origin = vec3Add(camera.origin, CameraForward(&camera, PI/2));
+        if ( KeyDown('D') )       camera.origin = vec3Sub(camera.origin, CameraForward(&camera, PI/2));
 
         // if ( KeyDown(VK_UP) ) camera.focalLength++;
         // if ( KeyDown(VK_DOWN) ) camera.focalLength--;
+
+
 
         ClearScreen(screen);
 
         qsort(objs, objBufferSize, sizeof(obj), objSortComp);
         for ( int i = 0; i < objBufferSize; i++ ) {
-            if (objs+i != NULL) RenderObject(screen, objs+i);
+            if (objs+i != NULL) RenderObject(screen, &camera, objs+i, 0);
         }
 
         // vec2 q = projectToCamera( vec3Add( vec3MultiplyValue( cube.vertBuffer[4], cube.scale ), cube.origin ) );
@@ -157,4 +167,5 @@ int mainCRTStartup() {
     FreeMesh(&cube);
     FreeMesh(&portal);
     CloseConsole();
+    return 0;
 }

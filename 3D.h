@@ -4,43 +4,47 @@
 
 #define PI 3.141592f
 
-
+#ifdef MASKED_DRAWING
+#define DrawLineV(screen, c, l0, l1, mask) \
+    DrawLine(screen, c, (int)l0.x, (int)l0.y, (int)l1.x, (int)l1.y, mask )
+#else
 #define DrawLineV(screen, c, l0, l1) \
     DrawLine(screen, c, (int)l0.x, (int)l0.y, (int)l1.x, (int)l1.y )
+#endif
 
 
 #define CAMERA_CLIP_NEAR 0.0f
 #define CAMERA_CLIP_FAR  1000.0f
 
-struct {
+typedef struct {
     vec3 origin, rotation;
     float focalLength;
-} camera;
+} Camera;
 
-vec3 CameraForward(float offset) {
-    float theta = camera.rotation.y+offset;
+vec3 CameraForward(Camera *camera, float offset) {
+    float theta = camera->rotation.y+offset;
     return (vec3){ -sinf(theta), 0.0f, cosf(theta) };
 }
 
-vec3 toCameraSpace(vec3 p) {
-    p =    vec3Sub(p, camera.origin);
-    p =    vec3Rotate(p, camera.rotation.x, 0);
-    p =    vec3Rotate(p, camera.rotation.y, 1);
-    return vec3Rotate(p, camera.rotation.z, 2);
+vec3 toCameraSpace(Camera *camera, vec3 p) {
+    p =    vec3Sub(p, camera->origin);
+    p =    vec3Rotate(p, camera->rotation.x, 0);
+    p =    vec3Rotate(p, camera->rotation.y, 1);
+    return vec3Rotate(p, camera->rotation.z, 2);
 }
 
-unsigned char inViewFrustum(vec3 p) {
+unsigned char inViewFrustum(Camera *camera, vec3 p) {
     if (
         p.z < CAMERA_CLIP_NEAR                              ||
         p.z > CAMERA_CLIP_FAR                               ||
-        p.z < fabsf(camera.focalLength*p.x) / SCREEN_WIDTH  ||
-        p.z < fabsf(camera.focalLength*p.y) / SCREEN_HEIGHT
+        p.z < fabsf(camera->focalLength*p.x) / SCREEN_WIDTH  ||
+        p.z < fabsf(camera->focalLength*p.y) / SCREEN_HEIGHT
     ) return false;
     return true;
 }
 
-vec2 projectToScreen(vec3 p) {
-    float z = camera.focalLength / p.z;
+vec2 projectToScreen(Camera *camera, vec3 p) {
+    float z = camera->focalLength / p.z;
     vec2 projected = (vec2){
         z * p.x + HALF_SCREEN_WIDTH,
         z * p.y + HALF_SCREEN_HEIGHT,
@@ -134,35 +138,38 @@ vec3 toWorldSpace(vec3 p, obj *o) {
     return vec3Add( vec3Multiply( p, o->scale ), o->origin );
 }
 
-void RenderObject(Surface *screen, obj *o) {
+
+
+
+void RenderObject(Surface *screen, Camera *camera, obj *o, char mask) {
     for ( size_t q = 0; q < o->m->quadBufferSize; q++ ) {
         // Camera space quad
-        vec3 cs0 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id0], o ) );
-        vec3 cs1 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id1], o ) );
-        vec3 cs2 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id2], o ) );
-        vec3 cs3 = toCameraSpace( toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id3], o ) );
+        vec3 cs0 = toCameraSpace( camera, toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id0], o ) );
+        vec3 cs1 = toCameraSpace( camera, toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id1], o ) );
+        vec3 cs2 = toCameraSpace( camera, toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id2], o ) );
+        vec3 cs3 = toCameraSpace( camera, toWorldSpace( o->m->vertBuffer[o->m->quadBuffer[q].id3], o ) );
 
         vec3 n   = vec3Cross( vec3Sub(cs0, cs1), vec3Sub(cs0, cs3) );
 
         // If at least one point is in the view frustum
         if (
-            ( inViewFrustum(cs0) || inViewFrustum(cs1) || inViewFrustum(cs2) || inViewFrustum(cs3) ) &&
+            ( inViewFrustum(camera, cs0) || inViewFrustum(camera, cs1) || inViewFrustum(camera, cs2) || inViewFrustum(camera, cs3) ) &&
             n.z > 0.0f // 0.0f > vec3Dot(n, vec3Sub(cs0, camera.origin))
         ) {
             // Project draw points
-            vec2 dp0 = projectToScreen(cs0);
-            vec2 dp1 = projectToScreen(cs1);
-            vec2 dp2 = projectToScreen(cs2);
-            vec2 dp3 = projectToScreen(cs3);
+            vec2 dp0 = projectToScreen(camera, cs0);
+            vec2 dp1 = projectToScreen(camera, cs1);
+            vec2 dp2 = projectToScreen(camera, cs2);
+            vec2 dp3 = projectToScreen(camera, cs3);
 
             // Draw quad
-            DrawTriangle(screen, o->fill, dp0, dp1, dp2);
-            DrawTriangle(screen, o->fill, dp2, dp3, dp0);
+            DrawTriangle(screen, o->fill, dp0, dp1, dp2, mask);
+            DrawTriangle(screen, o->fill, dp2, dp3, dp0, mask);
 
-            DrawLineV(screen, o->outline, dp0, dp1);
-            DrawLineV(screen, o->outline, dp1, dp2);
-            DrawLineV(screen, o->outline, dp2, dp3);
-            DrawLineV(screen, o->outline, dp3, dp0);
+            DrawLineV(screen, o->outline, dp0, dp1, mask);
+            DrawLineV(screen, o->outline, dp1, dp2, mask);
+            DrawLineV(screen, o->outline, dp2, dp3, mask);
+            DrawLineV(screen, o->outline, dp3, dp0, mask);
 
         }
     }

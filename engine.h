@@ -32,9 +32,20 @@ typedef unsigned char Surface;
 
 #define ClearScreen(screen) memset(screen, ' ', SCREEN_SIZE)
 
+char GetChar(Surface *screen, int x, int y) {
+    if ( 0 < x && x < SCREEN_WIDTH && 0 < y && y < SCREEN_HEIGHT )
+        return screen[SCREEN_WIDTH*y+x];
+    return 0;
+}
+
 void DrawChar(Surface *screen, char c, int x, int y) {
     if ( 0 < x && x < SCREEN_WIDTH && 0 < y && y < SCREEN_HEIGHT )
         screen[SCREEN_WIDTH*y+x] = c;
+}
+
+void DrawMaskedChar(Surface *screen, char c, int x, int y, char mask) {
+    if ( !mask ) DrawChar(screen, c, x, y);
+    else if ( GetChar(screen, x, y) == mask ) DrawChar(screen, c, x, y);
 }
     
 
