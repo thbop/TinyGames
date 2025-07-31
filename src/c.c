@@ -144,6 +144,11 @@ int mainCRTStartup() {
         if ( KeyDown('A') )       camera.origin = vec3Add(camera.origin, CameraForward(&camera, PI/2));
         if ( KeyDown('D') )       camera.origin = vec3Sub(camera.origin, CameraForward(&camera, PI/2));
 
+
+        if ( KeyDown(VK_UP) )   { portal1Camera.origin = camera.origin; portal1Camera.rotation = camera.rotation; }
+        if ( KeyDown(VK_DOWN) ) { portal2Camera.origin = camera.origin; portal2Camera.rotation = camera.rotation; }
+
+
         // if ( KeyDown(VK_UP) ) camera.focalLength++;
         // if ( KeyDown(VK_DOWN) ) camera.focalLength--;
 
@@ -153,7 +158,11 @@ int mainCRTStartup() {
 
         qsort(objs, objBufferSize, sizeof(obj), objSortComp);
         for ( int i = 0; i < objBufferSize; i++ ) {
-            if (objs+i != NULL) RenderObject(screen, &camera, objs+i, 0);
+            if (objs+i != NULL) {
+                RenderObject(screen, &camera, objs+i, 0);
+                RenderObject(screen, &portal1Camera, objs+i, '1');
+                RenderObject(screen, &portal2Camera, objs+i, '2');
+            }
         }
 
         // vec2 q = projectToCamera( vec3Add( vec3MultiplyValue( cube.vertBuffer[4], cube.scale ), cube.origin ) );

@@ -10,4 +10,4 @@ I also wrote a little 3D engine .
 ![Cool alt text](/misc/c.gif) 
 
 ## Build Instructions
-Install the C++ desktop build tools from the [Build Tools for Visual Studio Installer](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022), download/extract the latest [Crinkler release](https://github.com/runestubbe/Crinkler/releases) (this project used v2.3), run the Developer Command Prompt, and compile using the included batch file.
+Install the C++ desktop build tools from the [Build Tools for Visual Studio Installer](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022), download/extract the latest [Crinkler release](https://github.com/runestubbe/Crinkler/releases) (this project used v2.3), run the x86 Native Tools Command Prompt for VS 2022, and compile using the included Makefile.
