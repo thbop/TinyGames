@@ -3,7 +3,10 @@
 
 #include <windows.h>
 #include <stdio.h>
+
+#ifdef _MSC_VER
 #include <string.h>
+#endif
 
 // Application stuff
 #define SCREEN_WIDTH       120 // Win 10 is probably 80
