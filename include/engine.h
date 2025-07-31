@@ -28,6 +28,29 @@ typedef unsigned char Surface;
 // Keys
 #define KeyDown(key)  GetAsyncKeyState(key)
 
+#ifdef INCLUDE_GET_PRESSED_ASCII
+#pragma optimize( "", off )
+// Returns the last pressed key as ASCII
+char GetPressedASCII() {
+    BYTE keyboardState[256];
+    WORD out[1];
+    HKL layout = GetKeyboardLayout( 0 );
+
+    for ( int vk = 0x08; vk <= 0xFE; vk++ ) {
+        if ( GetAsyncKeyState( vk ) & 0x8000 ) {
+            GetKeyboardState( keyboardState );
+            UINT sc = MapVirtualKeyEx( vk, MAPVK_VK_TO_VSC, layout );
+            int len = ToAscii( vk, sc, keyboardState, (LPWORD)out, 0 );
+            if ( len == 1 && out[0] >= 0x20 && out[0] <= 0x7E )
+                return out[0];
+        }
+    }
+
+    return 0;
+}
+#pragma optimize( "", on )
+#endif
+
 // Boolean
 #define true  1
 #define false 0

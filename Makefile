@@ -1,5 +1,5 @@
 CC = cl
-CFLAGS = /c /I "include" /O1 /GS- /DNDEBUG
+CFLAGS = /c /I "include" /O2 /GS- /DNDEBUG
 LDFLAGS = kernel32.lib user32.lib
 SRC_DIR = src
 BUILD_DIR = bin
